@@ -1,0 +1,67 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speech Recognition Test</title>
+</head>
+<body>
+    <h1>Speech Recognition Test</h1>
+    <button id="recordButton">Record Audio</button>
+    <div id="transcription">Press the button and start speaking after it changes to 'Recording...'</div>
+
+    <script>
+        // Function to send audio data to Flask backend for transcription
+        function transcribeAudio(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob);
+
+            fetch('http://127.0.0.1:5000/speech-to-text', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(transcribedText => {
+                document.getElementById('transcription').innerText = transcribedText;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Function to start recording audio from microphone
+        function startRecording() {
+            document.getElementById('recordButton').innerText = 'Preparing...';
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const mediaRecorder = new MediaRecorder(stream);
+                const audioChunks = [];
+
+                mediaRecorder.addEventListener('dataavailable', event => {
+                    audioChunks.push(event.data);
+                });
+
+                mediaRecorder.addEventListener('stop', () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    transcribeAudio(audioBlob);
+                });
+
+                document.getElementById('recordButton').innerText = 'Recording...';
+                mediaRecorder.start();
+
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                    document.getElementById('recordButton').innerText = 'Record Audio';
+                }, 5000); // Record for 5 seconds
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                document.getElementById('recordButton').innerText = 'Record Audio'; // Reset button text on error
+            });
+        }
+
+        // Event listener for record button
+        document.getElementById('recordButton').addEventListener('click', startRecording);
+    </script>
+</body>
+</html>
