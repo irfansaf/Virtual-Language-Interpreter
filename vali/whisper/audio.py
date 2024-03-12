@@ -3,18 +3,17 @@ import torch
 import whisper
 import pyaudio
 import wave
+import io
 
 # Load Whisper model
 model = whisper.load_model('medium')
 
-
-# Transcribe audio from microphone
-def transcribe_audio():
+# Function to transcribe audio data
+def transcribe_audio(audio_data):
     CHUNK = 1024
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
     RATE = 16000
-    RECORD_SECONDS = 5
 
     p = pyaudio.PyAudio()
 
@@ -24,23 +23,21 @@ def transcribe_audio():
                     input=True,
                     frames_per_buffer=CHUNK)
 
-    audio_frames = []
-    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-        data = stream.read(CHUNK)
-        audio_frames.append(data)
+    audio_frames = io.BytesIO()
+
+    try:
+        while True:
+            data = stream.read(CHUNK)
+            audio_frames.write(data)
+    except KeyboardInterrupt:
+        pass
 
     stream.stop_stream()
     stream.close()
     p.terminate()
 
-    audio_data = b''.join(audio_frames)
-
-    # Save audio data to file
-    with wave.open('audio.wav', 'wb') as wf:
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(audio_data)
+    audio_frames.seek(0)
+    audio_data = audio_frames.read()
 
     # Convert audio data to numpy array
     audio = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0

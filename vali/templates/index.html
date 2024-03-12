@@ -1,67 +1,48 @@
-<!-- index.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Speech Recognition Test</title>
+    <title>Real-time Speech Recognition</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 </head>
 <body>
-    <h1>Speech Recognition Test</h1>
-    <button id="recordButton">Record Audio</button>
-    <div id="transcription">Press the button and start speaking after it changes to 'Recording...'</div>
+    <h1>Real-time Speech Recognition</h1>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <div id="transcription"></div>
 
     <script>
-        // Function to send audio data to Flask backend for transcription
-        function transcribeAudio(audioBlob) {
-            const formData = new FormData();
-            formData.append('audio', audioBlob);
+        const socket = io();
 
-            fetch('http://127.0.0.1:5000/speech-to-text', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.text())
-            .then(transcribedText => {
-                document.getElementById('transcription').innerText = transcribedText;
-            })
-            .catch(error => console.error('Error:', error));
-        }
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const transcription = document.getElementById('transcription');
 
-        // Function to start recording audio from microphone
-        function startRecording() {
-            document.getElementById('recordButton').innerText = 'Preparing...';
-            navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                const mediaRecorder = new MediaRecorder(stream);
-                const audioChunks = [];
+        let recognition = new webkitSpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
 
-                mediaRecorder.addEventListener('dataavailable', event => {
-                    audioChunks.push(event.data);
-                });
+        startButton.addEventListener('click', () => {
+            recognition.start();
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        });
 
-                mediaRecorder.addEventListener('stop', () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    transcribeAudio(audioBlob);
-                });
+        stopButton.addEventListener('click', () => {
+            recognition.stop();
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        });
 
-                document.getElementById('recordButton').innerText = 'Recording...';
-                mediaRecorder.start();
-
-                setTimeout(() => {
-                    mediaRecorder.stop();
-                    document.getElementById('recordButton').innerText = 'Record Audio';
-                }, 5000); // Record for 5 seconds
-            })
-            .catch(error => {
-                console.error('Error accessing microphone:', error);
-                document.getElementById('recordButton').innerText = 'Record Audio'; // Reset button text on error
-            });
-        }
-
-        // Event listener for record button
-        document.getElementById('recordButton').addEventListener('click', startRecording);
+        recognition.onresult = event => {
+            let transcript = '';
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            socket.emit('stream', transcript);
+            transcription.textContent = transcript;
+        };
     </script>
 </body>
 </html>
