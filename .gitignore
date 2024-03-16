@@ -1,12 +1,30 @@
-node_modules
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
-.idea/
-*.iml
-*.ipr
-*.iws
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
-backend/.idea/
+# Dependency directories
+node_modules/
 
-/.cache
-/build
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# dotenv environment variables file
 .env
+.env.test
+
+# IDEA
+.idea
+.idea/*
