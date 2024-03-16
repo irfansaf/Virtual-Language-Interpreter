@@ -1,4 +1,12 @@
+node_modules
+
 .idea/
 *.iml
 *.ipr
 *.iws
+
+backend/.idea/
+
+/.cache
+/build
+.env
