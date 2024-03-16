@@ -63,10 +63,10 @@ func handleSignalingMessage(sessionID string, rtcManager *webrtc.WebRTCManager, 
 		handleOffer(session, signal.Data, conn)
 	case "answer":
 		// Handle answer message
-		handleAnswer(session, signal.Data, conn)
+		handleAnswer(session, signal.Data)
 	case "iceCandidate":
 		// Handle ICE candidate message
-		handleICECandidate(session, signal.Data, conn)
+		handleICECandidate(session, signal.Data)
 	default:
 		log.Printf("Unsupported message type: %s", signal.Type)
 	}
@@ -114,7 +114,7 @@ func handleOffer(session *webrtc.Session, offerData json.RawMessage, conn *webso
 	}
 }
 
-func handleAnswer(session *webrtc.Session, answerData json.RawMessage, conn *websocket.Conn) {
+func handleAnswer(session *webrtc.Session, answerData json.RawMessage) {
 	// Unmarshal the answer data
 	var answer pion.SessionDescription
 	if err := json.Unmarshal(answerData, &answer); err != nil {
@@ -129,7 +129,7 @@ func handleAnswer(session *webrtc.Session, answerData json.RawMessage, conn *web
 	}
 }
 
-func handleICECandidate(session *webrtc.Session, candidateData json.RawMessage, conn *websocket.Conn) {
+func handleICECandidate(session *webrtc.Session, candidateData json.RawMessage) {
 	// Unmarshal the ICE candidate data
 	var candidate pion.ICECandidateInit
 	if err := json.Unmarshal(candidateData, &candidate); err != nil {
