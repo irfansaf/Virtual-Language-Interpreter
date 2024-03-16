@@ -15,7 +15,9 @@
   "author": "Irfan Saf",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.3"
+    "express": "^4.17.3",
+    "serve-favicon": "^2.5.0",
+    "socket.io": "^4.6.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"
