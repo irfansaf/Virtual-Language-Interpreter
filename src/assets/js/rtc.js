@@ -103,8 +103,12 @@ window.addEventListener( 'load', () => {
             socket.on( 'chat', ( data ) => {
                 h.addChat( data, 'remote' );
             } );
-        } );
 
+            socket.on('transcription', (data) => {
+                console.log(data);
+                document.getElementById('transcription-text').innerText = data.transcription;
+            });
+        } );
 
         function getAndSetUserStream() {
             h.getUserFullMedia().then( ( stream ) => {
@@ -115,6 +119,31 @@ window.addEventListener( 'load', () => {
             } ).catch( ( e ) => {
                 console.error( `stream error: ${ e }` );
             } );
+        }
+
+        function sendAudioForTranscription( audioBlob ) {
+            const reader = new FileReader();
+            reader.readAsDataURL(audioBlob);
+            reader.onload = () => {
+                const base64data = reader.result.split( ',' )[1];
+                socket.emit( 'audio', { audio: base64data } );
+            };
+        }
+
+        function startTranscription() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    const mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = event => {
+                        if (event.data.size > 0) {
+                            socket.emit('audio', { audio: event.data });
+                        }
+                    };
+                    mediaRecorder.start();
+                })
+                .catch(error => {
+                    console.error('Error accessing microphone:', error);
+                });
         }
 
 
@@ -276,6 +305,14 @@ window.addEventListener( 'load', () => {
 
 
         function stopSharingScreen() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+            }
+
+            if (audioRecorder && audioRecorder.state === 'recording') {
+                audioRecorder.stop();
+            }
+
             //enable video toggle btn
             h.toggleVideoBtnDisabled( false );
 

@@ -2,7 +2,7 @@ export default {
     generateRandomString() {
         const crypto = window.crypto || window.msCrypto;
         let array = new Uint32Array(1);
-        
+
         return crypto.getRandomValues(array);
     },
 
@@ -54,18 +54,23 @@ export default {
 
 
     getUserFullMedia() {
-        if ( this.userMediaAvailable() ) {
-            return navigator.mediaDevices.getUserMedia( {
+        if (this.userMediaAvailable()) {
+            return navigator.mediaDevices.getUserMedia({
                 video: true,
-                audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true
-                }
-            } );
-        }
+                audio: true
+            }).then(stream => {
+                // Start audio recording
+                let audioRecorder = new MediaRecorder(stream);
+                audioRecorder.ondataavailable = function(event) {
+                    sendAudioForTranscription(event.data);
+                };
+                audioRecorder.start();
 
-        else {
-            throw new Error( 'User media not available' );
+                // Return the combined stream
+                return stream;
+            });
+        } else {
+            throw new Error('User media not available');
         }
     },
 
@@ -323,5 +328,5 @@ export default {
                 clearInterval( testInterval );
             }
         }, 2000 );
-    }
+    },
 };

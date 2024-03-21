@@ -15,6 +15,7 @@
   "author": "Irfan Saf",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/speech": "^6.3.0",
     "express": "^4.17.3",
     "serve-favicon": "^2.5.0",
     "socket.io": "^4.6.1"
